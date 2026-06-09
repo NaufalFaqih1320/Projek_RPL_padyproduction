@@ -3,14 +3,21 @@
 require_once("../../config/auth.php");
 require_once("../../config/database.php");
 
-$result = mysqli_query($conn, "
+$query = mysqli_query($conn,"
 SELECT
-    inventory.*,
-    inventory_categories.category_name
-FROM inventory
-JOIN inventory_categories
-ON inventory.category_id = inventory_categories.id
-ORDER BY inventory.id DESC
+    ic.id,
+    ic.category_name,
+
+    COUNT(i.id) as total_item,
+
+    COALESCE(SUM(i.quantity),0) as total_stock
+
+FROM inventory_categories ic
+
+LEFT JOIN inventory i
+ON ic.id = i.category_id
+
+GROUP BY ic.id
 ");
 
 ?>
@@ -22,38 +29,36 @@ ORDER BY inventory.id DESC
 </head>
 <body>
 
-<h1>Daftar Inventaris</h1>
+<h1>Inventaris</h1>
 
 <a href="add.php">
-    Tambah Inventaris
+Tambah Inventaris
 </a>
 
 <hr>
 
-<?php while($row = mysqli_fetch_assoc($result)): ?>
+<?php while($row = mysqli_fetch_assoc($query)): ?>
 
 <div style="
 border:1px solid #ccc;
-padding:15px;
-margin-bottom:10px;
+padding:20px;
+margin-bottom:15px;
 ">
 
-<h3><?= $row['item_name']; ?></h3>
+<h2><?= $row['category_name']; ?></h2>
 
-<p>Kategori : <?= $row['category_name']; ?></p>
+<p>
+Total Jenis Barang :
+<?= $row['total_item']; ?>
+</p>
 
-<p>Jumlah : <?= $row['quantity']; ?> <?= $row['unit']; ?></p>
+<p>
+Total Stock :
+<?= $row['total_stock']; ?>
+</p>
 
-<p>Kondisi : <?= $row['condition_status']; ?></p>
-
-<a href="edit.php?id=<?= $row['id']; ?>">
-    Edit
-</a>
-
-|
-
-<a href="delete.php?id=<?= $row['id']; ?>">
-    Hapus
+<a href="detail.php?id=<?= $row['id']; ?>">
+Detail
 </a>
 
 </div>

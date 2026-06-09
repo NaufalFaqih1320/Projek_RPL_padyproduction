@@ -69,7 +69,7 @@ Edit
 
 |
 
-<a href="delete.php?id=<?= $item['id']; ?>">
+<a href="delete.php?id=<?= $item['id']; ?>" onclick="return confirm('Yakin ingin menghapus inventaris ini?')">
 Hapus
 </a>
 
