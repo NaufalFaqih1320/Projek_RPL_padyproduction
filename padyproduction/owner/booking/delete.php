@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * owner/booking/delete.php
+ * Hanya bisa hapus booking berstatus Draft atau Cancelled
+ */
+
 session_start();
 require_once("../../config/database.php");
 require_once("../../config/auth.php");
@@ -11,23 +16,32 @@ if ($_SESSION['role'] !== 'owner') {
 }
 
 $id = (int) ($_GET['id'] ?? 0);
-if ($id <= 0) {
-    header("Location: index.php");
-    exit();
-}
+if ($id <= 0) redirectWithMessage("index.php", "danger", "ID tidak valid.");
 
-// Kembalikan stok alat sebelum hapus
-$alat_list = mysqli_query($conn,
-    "SELECT inventory_id, jumlah_dipakai FROM booking_alat WHERE booking_id='$id'"
+$booking = mysqli_fetch_assoc(
+    mysqli_query($conn, "SELECT * FROM bookings WHERE id='$id' LIMIT 1")
 );
-while ($alat = mysqli_fetch_assoc($alat_list)) {
-    mysqli_query($conn,
-        "UPDATE inventory SET quantity_in_use = GREATEST(0, quantity_in_use - '{$alat['jumlah_dipakai']}')
-         WHERE id='{$alat['inventory_id']}'"
+if (!$booking) redirectWithMessage("index.php", "danger", "Booking tidak ditemukan.");
+
+if (!in_array($booking['status'], ['Draft', 'Cancelled'])) {
+    redirectWithMessage("index.php", "danger",
+        "Hanya booking berstatus Draft atau Cancelled yang dapat dihapus."
     );
 }
 
-// Hapus booking (cascade: kebutuhan_dekorasi, booking_alat, reminders)
-mysqli_query($conn, "DELETE FROM bookings WHERE id='$id'");
+mysqli_begin_transaction($conn);
+try {
+    // Lepas reservasi inventaris jika ada
+    releaseInventory($conn, $id);
 
-redirectWithMessage("index.php", "success", "Booking berhasil dihapus.");
+    // Hapus booking (CASCADE akan hapus kebutuhan_dekorasi, booking_alat, reminders, logs)
+    mysqli_query($conn, "DELETE FROM bookings WHERE id='$id'");
+
+    mysqli_commit($conn);
+    redirectWithMessage("index.php", "success",
+        "Booking <strong>{$booking['booking_code']}</strong> berhasil dihapus."
+    );
+} catch (Exception $e) {
+    mysqli_rollback($conn);
+    redirectWithMessage("index.php", "danger", "Gagal menghapus: " . $e->getMessage());
+}
