@@ -1,13 +1,7 @@
 <?php
 
-/**
- * admin/users/process_edit.php — VERSI DIPERBAIKI
- * Password di-hash jika diubah
- */
-
-session_start();
-require_once("../../config/database.php");
 require_once("../../config/auth.php");
+require_once("../../config/database.php");
 require_once("../../config/helpers.php");
 
 if ($_SESSION['role'] !== 'admin') {
@@ -15,57 +9,76 @@ if ($_SESSION['role'] !== 'admin') {
     exit();
 }
 
-$id         = (int) ($_POST['id']          ?? 0);
-$name       = sanitize($conn, $_POST['name']       ?? '');
-$username   = sanitize($conn, $_POST['username']   ?? '');
-$email      = sanitize($conn, $_POST['email']      ?? '');
-$password   = trim($_POST['password']              ?? '');
-$no_telepon = sanitize($conn, $_POST['no_telepon'] ?? '');
-$role       = sanitize($conn, $_POST['role']       ?? '');
-
-$errors = [];
-if ($id <= 0)          $errors[] = "ID tidak valid.";
-if (empty($name))      $errors[] = "Nama wajib diisi.";
-if (empty($username))  $errors[] = "Username wajib diisi.";
-if (empty($email))     $errors[] = "Email wajib diisi.";
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Format email tidak valid.";
-if (!empty($password) && strlen($password) < 6) $errors[] = "Password baru minimal 6 karakter.";
-if (!in_array($role, ['admin','owner','crew','client','user'])) $errors[] = "Role tidak valid.";
-
-// Cegah admin menghapus role sendiri
-if ($id === (int)$_SESSION['id'] && $role !== 'admin') {
-    $errors[] = "Anda tidak bisa mengubah role akun Anda sendiri.";
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: index.php");
+    exit();
 }
 
+$id         = (int) ($_POST['id'] ?? 0);
+$username   = sanitize($conn, $_POST['username']   ?? '');
+$name       = sanitize($conn, $_POST['name']       ?? '');
+$email      = sanitize($conn, $_POST['email']      ?? '');
+$no_telepon = sanitize($conn, $_POST['no_telepon'] ?? '');
+$password   = $_POST['password']  ?? '';
+$password2  = $_POST['password2'] ?? '';
+$role       = sanitize($conn, $_POST['role'] ?? 'client');
+
+$errors = [];
+if ($id <= 0)        $errors[] = "ID pengguna tidak valid.";
+if (empty($username)) $errors[] = "Username wajib diisi.";
+if (empty($name))    $errors[] = "Nama wajib diisi.";
+if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Email tidak valid.";
+
+$valid_roles = ['admin', 'owner', 'crew', 'client'];
+if (!in_array($role, $valid_roles)) $errors[] = "Role tidak valid.";
+
+// Validasi password hanya jika diisi
+if (!empty($password)) {
+    if (strlen($password) < 6) $errors[] = "Password minimal 6 karakter.";
+    if ($password !== $password2) $errors[] = "Konfirmasi password tidak cocok.";
+}
+
+// Cek duplikat (kecuali milik sendiri)
 if (empty($errors)) {
     $cek = mysqli_fetch_assoc(mysqli_query($conn,
-        "SELECT id FROM users WHERE (username='$username' OR email='$email') AND id!='$id' LIMIT 1"
+        "SELECT id FROM users WHERE username='$username' AND id!='$id' LIMIT 1"
     ));
-    if ($cek) $errors[] = "Username atau email sudah digunakan pengguna lain.";
+    if ($cek) $errors[] = "Username sudah digunakan.";
+
+    $cek2 = mysqli_fetch_assoc(mysqli_query($conn,
+        "SELECT id FROM users WHERE email='$email' AND id!='$id' LIMIT 1"
+    ));
+    if ($cek2) $errors[] = "Email sudah terdaftar.";
 }
 
 if (!empty($errors)) {
     $_SESSION['user_errors'] = $errors;
+    $_SESSION['user_old']    = $_POST;
     header("Location: edit.php?id=$id");
     exit();
 }
 
-$pass_clause = '';
+// Cegah admin hapus role diri sendiri
+if ($id == (int)$_SESSION['id'] && $role !== 'admin') {
+    $_SESSION['user_errors'] = ["Anda tidak bisa mengubah role akun sendiri."];
+    header("Location: edit.php?id=$id");
+    exit();
+}
+
 if (!empty($password)) {
     $hashed     = password_hash($password, PASSWORD_BCRYPT);
     $hashed_esc = mysqli_real_escape_string($conn, $hashed);
-    $pass_clause = ", password='$hashed_esc'";
+    mysqli_query($conn,
+        "UPDATE users SET username='$username', name='$name', email='$email',
+         no_telepon='$no_telepon', password='$hashed_esc', role='$role'
+         WHERE id='$id'"
+    );
+} else {
+    mysqli_query($conn,
+        "UPDATE users SET username='$username', name='$name', email='$email',
+         no_telepon='$no_telepon', role='$role'
+         WHERE id='$id'"
+    );
 }
 
-mysqli_query($conn, "
-    UPDATE users SET
-        name       = '$name',
-        username   = '$username',
-        email      = '$email',
-        no_telepon = '$no_telepon',
-        role       = '$role'
-        $pass_clause
-    WHERE id = '$id'
-");
-
-redirectWithMessage("index.php", "success", "Data pengguna berhasil diperbarui.");
+redirectWithMessage("index.php", "success", "Data pengguna <strong>$name</strong> berhasil diperbarui.");
