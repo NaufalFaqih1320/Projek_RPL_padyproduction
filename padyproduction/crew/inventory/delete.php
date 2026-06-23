@@ -6,8 +6,9 @@
  */
 
 session_start();
-require_once("../../config/database.php");
-require_once("../../config/auth.php");
+
+require_once("../../config/auth.php");    
+require_once("../../config/database.php"); 
 require_once("../../config/helpers.php");
 
 if (!in_array($_SESSION['role'], ['crew', 'admin'])) {

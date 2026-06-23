@@ -1,7 +1,9 @@
 <?php
 
-require_once("../../config/auth.php");
-require_once("../../config/database.php");
+
+require_once("../../config/auth.php");    // ✅ PERTAMA
+require_once("../../config/database.php"); // ✅ KEDUA
+require_once("../../config/helpers.php"); // ✅ KETIGA
 
 $category_id = $_GET['id'];
 
