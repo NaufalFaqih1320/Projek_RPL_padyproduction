@@ -5,11 +5,10 @@
  * Hanya bisa hapus booking berstatus Draft atau Cancelled
  */
 
-session_start();
+require_once("../../config/auth.php");
+require_once("../../config/database.php");
+require_once("../../config/helpers.php");
 
-require_once("../../config/auth.php");    // ✅ PERTAMA
-require_once("../../config/database.php"); // ✅ KEDUA
-require_once("../../config/helpers.php"); // ✅ KETIGA
 
 if ($_SESSION['role'] !== 'owner') {
     header("Location: ../../auth/login.php");

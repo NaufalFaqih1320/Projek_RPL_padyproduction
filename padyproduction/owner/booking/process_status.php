@@ -10,9 +10,8 @@
  * - (apapun)   → Cancelled  : lepas reservasi inventaris, notif client
  */
 
-session_start();
-require_once("../../config/database.php");
 require_once("../../config/auth.php");
+require_once("../../config/database.php");
 require_once("../../config/helpers.php");
 
 // Owner dan Admin bisa ubah status

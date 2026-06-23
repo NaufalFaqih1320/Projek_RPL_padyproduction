@@ -1,8 +1,8 @@
 <?php
 
-session_start();
-require_once("../../config/database.php");
 require_once("../../config/auth.php");
+require_once("../../config/database.php");
+require_once("../../config/helpers.php");
 
 $id         = (int) $_POST['id'];
 $booking_id = (int) $_POST['booking_id'];
