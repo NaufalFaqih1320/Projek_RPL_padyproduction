@@ -306,11 +306,11 @@ function statusLabel(string $status): string {
             <div class="info-row">
                 <div class="info-block">
                     <h4>Tanggal Acara</h4>
-                    <p>🗓 <?= formatTanggal($b['tanggal_acara']); ?></p>
+                    <p> <?= formatTanggal($b['tanggal_acara']); ?></p>
                 </div>
                 <div class="info-block">
                     <h4>Tanggal Booking</h4>
-                    <p>🗓 <?= formatTanggal($b['tanggal_booking']); ?></p>
+                    <p> <?= formatTanggal($b['tanggal_booking']); ?></p>
                 </div>
             </div>
 
