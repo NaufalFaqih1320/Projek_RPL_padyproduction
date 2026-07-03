@@ -109,15 +109,16 @@ function statusLabel(string $status): string {
         border-bottom:1px solid var(--border);
     }
     nav.tabs a{
-        padding:18px 0;
+        padding:18px 0 15px;
         text-decoration:none;
         color:#555;
         font-size:18px;
+        font-weight:600;
+        border-bottom:3px solid transparent;
     }
     nav.tabs a.active{
         color:var(--orange);
-        border-bottom:3px solid var(--orange);
-        font-weight:600;
+        border-bottom-color:var(--orange);
     }
 
     main{padding:30px 40px;}
@@ -251,6 +252,7 @@ function statusLabel(string $status): string {
 </header>
 
 <nav class="tabs">
+    <a href="../dashboard.php">Dashboard</a>
     <a href="index.php" class="active">Daftar Booking</a>
     <a href="../jadwal.php">Jadwal</a>
     <a href="../inventaris.php">Informasi Inventaris</a>
