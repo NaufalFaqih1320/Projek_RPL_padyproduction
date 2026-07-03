@@ -252,7 +252,7 @@ function statusLabel(string $status): string {
 
 <nav class="tabs">
     <a href="index.php" class="active">Daftar Booking</a>
-    <a href="../dashboard.php">Jadwal</a>
+    <a href="../jadwal.php">Jadwal</a>
     <a href="../dashboard.php">Informasi Inventaris</a>
 </nav>
 
