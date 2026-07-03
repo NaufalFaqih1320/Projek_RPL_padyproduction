@@ -2,106 +2,103 @@
 
 require_once("../../config/auth.php");
 require_once("../../config/database.php");
+require_once("../../config/helpers.php");
 
-$categories = mysqli_query(
-    $conn,
-    "SELECT * FROM inventory_categories"
-);
+if ($_SESSION['role'] !== 'crew') {
+    header("Location: ../../auth/login.php");
+    exit();
+}
 
+$categories = mysqli_query($conn, "SELECT * FROM inventory_categories ORDER BY category_name ASC");
+
+$errors = getFlashErrors('inv_errors');
+$old = $_SESSION['inv_old'] ?? [];
+unset($_SESSION['inv_old']);
 ?>
-
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Tambah Inventaris</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Inventaris - PADY Production</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-white">
 
-<h1>Tambah Inventaris</h1>
+<?php $active_tab = 'inventaris'; include "../partials/topbar.php"; ?>
 
-<form action="process_add.php" method="POST">
+<main class="max-w-4xl mx-auto px-6 py-10">
 
-<label>Kategori</label><br>
+    <a href="index.php"
+       class="inline-flex items-center gap-2 border border-orange-400 text-orange-500 rounded-full px-6 py-2.5 font-medium hover:bg-orange-50 transition mb-8">
+        &larr; Kembali
+    </a>
 
-<select name="category_id" required>
+    <div class="border border-gray-200 rounded-3xl shadow-sm p-10">
+        <h2 class="text-3xl font-extrabold text-center text-neutral-900 mb-8">Tambah Inventaris</h2>
 
-<?php while($category = mysqli_fetch_assoc($categories)): ?>
+        <?= $errors ?>
 
-<option value="<?= $category['id']; ?>">
-    <?= $category['category_name']; ?>
-</option>
+        <form action="process_add.php" method="POST" class="space-y-6">
 
-<?php endwhile; ?>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-neutral-800 mb-2">Jenis Inventaris</label>
+                    <select name="category_id" required
+                            class="w-full border border-orange-300 rounded-full px-5 py-3 text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-300">
+                        <option value="" disabled <?= empty($old['category_id']) ? 'selected' : '' ?>>Pilih jenis inventaris</option>
+                        <?php while ($cat = mysqli_fetch_assoc($categories)): ?>
+                            <option value="<?= $cat['id'] ?>" <?= (($old['category_id'] ?? '') == $cat['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($cat['category_name']) ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
 
-</select>
+                <div>
+                    <label class="block text-neutral-800 mb-2">Nama Inventaris</label>
+                    <input type="text" name="item_name" required placeholder="Sound System Besar"
+                           value="<?= htmlspecialchars($old['item_name'] ?? '') ?>"
+                           class="w-full border border-orange-300 rounded-full px-5 py-3 text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-300">
+                </div>
+            </div>
 
-<br><br>
+            <div>
+                <label class="block text-neutral-800 mb-2">Jumlah</label>
+                <input type="number" name="quantity" min="1" required placeholder="1"
+                       value="<?= htmlspecialchars($old['quantity'] ?? '') ?>"
+                       class="w-full border border-orange-300 rounded-full px-5 py-3 text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-300">
+            </div>
 
-<label>Nama Inventaris</label><br>
+            <input type="hidden" name="unit" value="Unit">
 
-<input
-type="text"
-name="item_name"
-required
->
+            <div>
+                <label class="block text-neutral-800 mb-2">Kondisi</label>
+                <select name="condition_status" required
+                        class="w-full border border-orange-300 rounded-full px-5 py-3 text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-300">
+                    <?php foreach (['Sangat Baik', 'Baik', 'Cukup', 'Kurang Baik', 'Buruk'] as $kondisi): ?>
+                        <option value="<?= $kondisi ?>" <?= (($old['condition_status'] ?? 'Sangat Baik') === $kondisi) ? 'selected' : '' ?>>
+                            <?= $kondisi ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-<br><br>
+            <div class="flex gap-4 pt-4">
+                <a href="index.php"
+                   class="flex-1 text-center border border-orange-400 text-orange-500 rounded-full py-3 font-semibold hover:bg-orange-50 transition">
+                    Batal
+                </a>
+                <button type="submit"
+                        class="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-full py-3 font-semibold transition">
+                    Tambah
+                </button>
+            </div>
 
-<label>Jumlah</label><br>
+        </form>
+    </div>
 
-<input
-type="number"
-name="quantity"
-required
-min="1"
->
-
-<br><br>
-
-<label>Satuan</label><br>
-
-<input
-type="text"
-name="unit"
-value="Unit"
-required
->
-
-<br><br>
-
-<label>Kondisi</label><br>
-
-<select name="condition_status">
-
-<option value="Sangat Baik">
-Sangat Baik
-</option>
-
-<option value="Baik">
-Baik
-</option>
-
-<option value="Cukup">
-Cukup
-</option>
-
-<option value="Kurang Baik">
-Kurang Baik
-</option>
-
-<option value="Buruk">
-Buruk
-</option>
-
-</select>
-
-<br><br>
-
-<button type="submit">
-Simpan
-</button>
-
-</form>
+</main>
 
 </body>
 </html>
