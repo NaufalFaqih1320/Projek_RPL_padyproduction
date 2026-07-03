@@ -333,7 +333,7 @@ $hari_ini_cocok = ($bulan_ini == (int)date('n') && $tahun_ini == (int)date('Y'))
 <nav class="tabs">
     <a href="booking/index.php">Daftar Booking</a>
     <a href="jadwal.php" class="active">Jadwal</a>
-    <a href="../admin/inventory/index.php">Informasi Inventaris</a>
+    <a href="inventaris.php">Informasi Inventaris</a>
 </nav>
 
 <main>

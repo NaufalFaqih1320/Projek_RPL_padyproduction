@@ -33,7 +33,7 @@ $reminders_pending = mysqli_fetch_assoc(mysqli_query($conn,
 <nav>
     <a href="booking/index.php">📋 Kelola Booking</a> |
     <a href="booking/add.php">➕ Tambah Booking</a> |
-    <a href="../admin/inventory/index.php">📦 Inventaris</a> |
+    <a href="../owner/inventaris.php">📦 Inventaris</a> |
     <a href="../auth/logout.php">🚪 Logout</a>
 </nav>
 
